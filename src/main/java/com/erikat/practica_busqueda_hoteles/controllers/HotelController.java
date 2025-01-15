@@ -7,6 +7,9 @@ import com.erikat.practica_busqueda_hoteles.model.Hotel;
 import com.erikat.practica_busqueda_hoteles.service.HabitacionService;
 import com.erikat.practica_busqueda_hoteles.service.HotelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,29 +34,38 @@ public class HotelController {
 
     @GetMapping("/")
     @Operation(summary = "Obtiene una lista de hoteles")
-    public ResponseEntity<?> getHoteles(){
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Listado de todos los hoteles", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Habitacion.class)))),
+    })
+    public ResponseEntity<?> getHoteles() {
         try {
             return new ResponseEntity<>(this.hotelService.getAllHoteles(), HttpStatus.ACCEPTED);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de búsqueda", e);
         }
     }
 
     ///a. Buscar un hotel por localidad
-    @GetMapping("hotel/localidad/{loc}")
+    @GetMapping("localidad/{loc}")
     @Operation(summary = "Obtiene una lista de hoteles con la localidad puesta")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listado de hoteles con la localidad dada")
+            @ApiResponse(responseCode = "200", description = "Listado de hoteles con la localidad dada", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Habitacion.class)))),
+            @ApiResponse(responseCode = "400", description = "No se ha puesto localidad")
     })
     public ResponseEntity<?> getHotelesInLoc(@PathVariable("loc") String localizacion) {
-        return new ResponseEntity<>(this.hotelService.getHotelesByLoc(localizacion), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(this.hotelService.getHotelesByLoc(localizacion), HttpStatus.OK);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de búsqueda", e);
+        }
     }
 
     ///a. Buscar un hotel por categoría
-    @GetMapping("hotel/categoria/{cat}")
+    @GetMapping("categoria/{cat}")
     @Operation(summary = "Obtiene una lista de hoteles con la categoría puesta")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listado de hoteles con la categoría dada")
+            @ApiResponse(responseCode = "200", description = "Listado de hoteles con la categoría dada", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Hotel.class)))),
+            @ApiResponse(responseCode = "400", description = "No se ha escrito la categoria")
     })
     public ResponseEntity<?> getHotelesByCat(@PathVariable("cat") String categoria) {
         try {
@@ -71,14 +83,14 @@ public class HotelController {
             @ApiResponse(responseCode = "403", description = "El campo de tamaño mínimo es mayor que el del tamaño máximo"),
             @ApiResponse(responseCode = "400", description = "El id del hotel no es correcto")
     })
-    public ResponseEntity<?> getHabitacionesByTamHotel(@PathVariable("id") int id, @PathVariable("mintam") int minTam, @PathVariable("maxtam") int maxTam){
-        try{
-            if (minTam<=maxTam) {
+    public ResponseEntity<?> getHabitacionesByTamHotel(@PathVariable("id") int id, @PathVariable("mintam") int minTam, @PathVariable("maxtam") int maxTam) {
+        try {
+            if (minTam <= maxTam) {
                 return new ResponseEntity<>(hotelService.getHabitacionesByTamHotel(id, minTam, maxTam), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("El tamaño minimo debe ser menor o igual al maximo", HttpStatus.FORBIDDEN);
             }
-        }catch(Exception e) {
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de obtención de datos", e);
         }
     }
@@ -87,27 +99,27 @@ public class HotelController {
     @GetMapping("hotel/{id}/habitaciones/precioEntre/{minprice}:{maxprice}")
     @Operation(summary = "Obtiene una lista de habitaciones de un hotel cuyo precio se encuentre entre dos valores")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listado de habitaciones en el hotel deseado cuyo precio se encuentra entre los propuestos"),
+            @ApiResponse(responseCode = "200", description = "Listado de habitaciones en el hotel deseado cuyo precio se encuentra entre los propuestos", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Hotel.class)))),
             @ApiResponse(responseCode = "403", description = "El campo de precio mínimo es mayor que el del precio máximo"),
             @ApiResponse(responseCode = "404", description = "El id del hotel no es correcto")
     })
-    public ResponseEntity<?> getHabitacionesByPriceHotel(@PathVariable("id") int id, @PathVariable("minprice") int minprice, @PathVariable("maxprice") int maxprice){
-        try{
-            if(minprice<=maxprice) {
+    public ResponseEntity<?> getHabitacionesByPriceHotel(@PathVariable("id") int id, @PathVariable("minprice") int minprice, @PathVariable("maxprice") int maxprice) {
+        try {
+            if (minprice <= maxprice) {
                 return new ResponseEntity<>(hotelService.getHabitacionesByPriceHotel(id, minprice, maxprice), HttpStatus.OK);
-            }else {
+            } else {
                 return new ResponseEntity<>("El precio minimo debe ser menor o igual que el máximo", HttpStatus.BAD_REQUEST);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de obtención de datos", e);
         }
     }
 
     ///c. Registrar un nuevo hotel
     @PostMapping("registrarHotel")
-    @Operation(summary = "Registra un hotel pasado por el usuario")
+    @Operation(summary = "Registra un hotel que escribe el usuario")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listado de hoteles con la categoría dada"),
+            @ApiResponse(responseCode = "200", description = "Registra el hotel correctamente"),
             @ApiResponse(responseCode = "403", description = "El campo de tamaño mínimo es mayor que el del tamaño máximo"),
             @ApiResponse(responseCode = "404", description = "El id del hotel no es correcto")
     })
@@ -124,7 +136,7 @@ public class HotelController {
     @PostMapping("hotel/{id}/guardarHabitacion")
     @Operation(summary = "Registra una habitación dentro de un hotel")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Habitación guardada"),
+            @ApiResponse(responseCode = "200", description = "Habitación guardada", content = @Content(schema = @Schema(implementation = Habitacion.class))),
             @ApiResponse(responseCode = "400", description = "Sintaxis de la habitación o id del hotel incorrectos")
 
     })
@@ -145,12 +157,12 @@ public class HotelController {
             @ApiResponse(responseCode = "400", description = "Id de la habitación o id del hotel incorrectos"),
 
     })
-    public ResponseEntity<?> borrarHabitacion(@PathVariable("idHotel") int idHotel, @PathVariable("idHab") int idHabitacion){
-        try{
+    public ResponseEntity<?> borrarHabitacion(@PathVariable("idHotel") int idHotel, @PathVariable("idHab") int idHabitacion) {
+        try {
             boolean encontrado = false;
             Hotel hotel = this.hotelService.getHotelById(idHotel);
             Iterator<Habitacion> iterator = hotel.getHabitaciones().iterator();
-            while(iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 Habitacion h = iterator.next();
                 if (h.getId() == idHabitacion) {
                     encontrado = true;
@@ -158,12 +170,12 @@ public class HotelController {
                     habitacionService.borrarHabitacion(h.getId());
                 }
             }
-            if(!encontrado){
+            if (!encontrado) {
                 return new ResponseEntity<String>("No se ha encontrado la habitación en el hotel", HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>(HttpStatus.OK);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de borrado", e);
         }
     }

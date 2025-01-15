@@ -4,7 +4,10 @@ import com.erikat.practica_busqueda_hoteles.model.Habitacion;
 import com.erikat.practica_busqueda_hoteles.model.Hotel;
 import com.erikat.practica_busqueda_hoteles.service.HabitacionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +30,7 @@ public class HabitacionController {
     @GetMapping("/")
     @Operation(summary = "Obtiene la lista de todas las habitaciones")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista todas las habitaciones"),
+            @ApiResponse(responseCode = "200", description = "Lista todas las habitaciones", content = @Content (array = @ArraySchema(schema = @Schema(implementation = Habitacion.class)))),
     })
     public ResponseEntity<?> getAll(){
         return new ResponseEntity<>(habitacionService.findAll(), HttpStatus.OK);
